@@ -4,6 +4,7 @@ import { Router, Route, IndexRoute, browserHistory, hashHistory, Redirect } from
 import willTransitionTo from "./routerTransition";
 import App from "./App";
 
+
 // Components imported here for react hot loader (does not work with async route loading)
 import DashboardContainer from "./components/Dashboard/DashboardContainer";
 import DashboardAccountsOnly from "./components/Dashboard/DashboardAccountsOnly";
@@ -50,6 +51,7 @@ import Help from "./components/Help";
 import InitError from "./components/InitError";
 import LoginSelector from "./components/LoginSelector";
 import CreateWorker from "./components/Account/CreateWorker";
+import NotFound from './components/NotFound';
 
 const history = __HASH_HISTORY__ ? hashHistory : browserHistory;
 
@@ -143,6 +145,8 @@ const routes = (
                 </Route>
             </Route>
         </Route>
+
+        <Route path='*' exact={true} component={NotFound} />
     </Route>
 );
 
