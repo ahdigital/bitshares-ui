@@ -1,5 +1,6 @@
-import {ChainStore} from "bitsharesjs/es";
 import React from "react";
+import { ChainStore } from "bitsharesjs/es";
+import { Link } from "react-router/es";
 import IntlStore from "stores/IntlStore";
 import AccountStore from "stores/AccountStore";
 import SettingsStore from "stores/SettingsStore";
@@ -8,7 +9,7 @@ import NotificationStore from "stores/NotificationStore";
 import intlData from "./components/Utility/intlData";
 import alt from "alt-instance";
 import { connect, supplyFluxContext } from "alt-react";
-import {IntlProvider} from "react-intl";
+import { IntlProvider } from "react-intl";
 import SyncError from "./components/SyncError";
 import LoadingIndicator from "./components/LoadingIndicator";
 import BrowserNotifications from "./components/BrowserNotifications/BrowserNotificationsContainer";
@@ -23,8 +24,18 @@ import Footer from "./components/Layout/Footer";
 import Deprecate from "./Deprecate";
 // import Incognito from "./components/Layout/Incognito";
 // import { isIncognito } from "feature_detect";
+import mlpushmenu from "assets/mlpushmenu";
+import SendModal from "components/Modal/SendModal";
+import DepositModal from "components/Modal/DepositModal";
+import { Apis } from "bitsharesjs-ws";
+import SidebarMenu from "components/Layout/SidebarMenu";
 
 class App extends React.Component {
+
+    static contextTypes = {
+        location: React.PropTypes.object.isRequired,
+        router: React.PropTypes.object.isRequired
+    };
 
     constructor() {
         super();
@@ -42,7 +53,7 @@ class App extends React.Component {
             isMobile: !!(/android|ipad|ios|iphone|windows phone/i.test(user_agent) || isSafari),
             incognito: false,
             incognitoWarningDismissed: false,
-            height: window && window.innerHeight
+            height: window && window.innerHeight,
         };
 
         this._rebuildTooltips = this._rebuildTooltips.bind(this);
@@ -161,12 +172,55 @@ class App extends React.Component {
     //     this.refs.notificationSystem.addNotification(params);
     // }
 
+    _closeMenu() {
+        var menu = new mlPushMenu(document.getElementById('mp-menu'), document.getElementById('trigger'), {
+            type: 'cover'
+        });
+
+        menu._resetMenu();
+    }
+
+    _onNavigate(route, e) {
+        e.preventDefault();
+        this._closeMenu();
+        this.context.router.push(route);
+    }
+
+    _showSend(e) {
+        console.log("-- SHOW SEND HIT")
+        e.preventDefault();
+        this._closeMenu();
+        this.refs.send_modal.show();
+        this._closeDropdown();
+    }
+
+    _showDeposit(e) {
+        e.preventDefault();
+        this._closeMenu();
+        this.refs.deposit_modal_new.show();
+        this._closeDropdown();
+    }
+
+    _closeAccountsListDropdown() {
+        this.setState({
+            accountsListDropdownActive: false
+        });
+    }
+
+    _closeDropdown() {
+        this._closeAccountsListDropdown();
+    }
+
     render() {
         let {isMobile, theme } = this.state;
-
         let content = null;
-
         let showFooter = 1;
+        let {currentAccount, passwordLogin, passwordAccount} = this.props;
+
+        const a = ChainStore.getAccount(currentAccount);
+        const isMyAccount = !a ? false : (AccountStore.isMyAccount(a) || (passwordLogin && currentAccount === passwordAccount));
+        const enableDepositWithdraw = Apis.instance().chain_id.substr(0, 8) === "4018d784" && isMyAccount;
+
         // if(incognito && !incognitoWarningDismissed){
         //     content = (
         //         <Incognito onClickIgnore={this._onIgnoreIncognitoWarning.bind(this)}/>
@@ -200,25 +254,46 @@ class App extends React.Component {
             );
         }
 
+        let tradeUrl = this.props.lastMarket ? `/market/${this.props.lastMarket}` : "/market/USD_BTS";
+
         return (
-            <div style={{backgroundColor: !this.state.theme ? "#2a2a2a" : null}} className={this.state.theme}>
-                <div id="content-wrapper">
-                    {content}
-                    <NotificationSystem
-                        ref="notificationSystem"
-                        allowHTML={true}
-                        style={{
-                            Containers: {
-                                DefaultStyle: {
-                                    width: "425px"
-                                }
-                            }
-                        }}
-                    />
-                    <TransactionConfirm/>
-                    <BrowserNotifications/>
-                    <WalletUnlockModal/>
-                    <BrowserSupportModal ref="browser_modal"/>
+            <div className="mp-container">
+                <div id="mp-pusher" style={{backgroundColor: !this.state.theme ? "#2a2a2a" : null}} className={this.state.theme + " mp-pusher"}>
+                    <div id="content-wrapper">
+                    
+                    
+                        <SidebarMenu navigate={this._onNavigate.bind(this)} />
+
+                        <div className="scroller">
+                            <div className="scroller-inner">
+                                {content}
+                                <NotificationSystem
+                                    ref="notificationSystem"
+                                    allowHTML={true}
+                                    style={{
+                                        Containers: {
+                                            DefaultStyle: {
+                                                width: "425px"
+                                            }
+                                        }
+                                    }}
+                                />
+                                <TransactionConfirm/>
+                                <BrowserNotifications/>
+                                <WalletUnlockModal/>
+                                <BrowserSupportModal ref="browser_modal"/>
+                            </div>
+                        </div>
+                        <SendModal id="send_modal_header"
+                            ref="send_modal"
+                            from_name={currentAccount} />
+
+                        <DepositModal
+                            ref="deposit_modal_new"
+                            modalId="deposit_modal_new"
+                            account={currentAccount}
+                            backedCoins={this.props.backedCoins} />
+                    </div>
                 </div>
             </div>
         );
@@ -270,6 +345,14 @@ class Root extends React.Component {
                 main.className = main.className + (main.className.length ? ' ' : '') + windowsClass;
             }
         }
+    }
+
+    componentDidUpdate(){
+        var menu = new mlPushMenu(document.getElementById('mp-menu'), document.getElementById('trigger'), {
+            type: 'cover'
+        });
+
+        menu;
     }
 
     getChildContext() {

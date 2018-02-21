@@ -584,8 +584,10 @@ class Header extends React.Component {
                     }
                 </div>
                 <div className="app-menu">
-                    <div onClick={this._toggleDropdownMenu} className={cnames("menu-dropdown-wrapper dropdown-wrapper", {active: this.state.dropdownActive})}>
-                        <div className="hamburger">{hamburger}</div>
+                    {/*<div onClick={this._toggleDropdownMenu} className={cnames("menu-dropdown-wrapper dropdown-wrapper", {active: this.state.dropdownActive})}>*/}
+                    <div className={cnames("menu-dropdown-wrapper dropdown-wrapper", {active: this.state.dropdownActive})}>
+                        {/*<div className="hamburger">{hamburger}</div>*/}
+                        <div id="trigger" className="menu-trigger">Menu</div>
 
                         { this.state.dropdownSubmenuActive  && submenus[this.state.dropdownSubmenuActiveItem] && (
                             submenus[this.state.dropdownSubmenuActiveItem]
