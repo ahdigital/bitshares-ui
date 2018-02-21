@@ -10,7 +10,6 @@ import SettingsStore from "stores/SettingsStore";
 import SettingsActions from "actions/SettingsActions";
 import Icon from "../Icon/Icon";
 import counterpart from "counterpart";
-// import { launchIntroJS } from "";
 import "intro.js/introjs.css";
 import guide from "intro.js"
 
